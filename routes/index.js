@@ -34,14 +34,31 @@ router.get('/', function(req, res) {
 });
 
 /* Upload image in S3 */
-router.post('/upload', upload.single('image'), function(req, res) {
-  try {
-    console.log("Successfully Upload.");
-    res.json({result: true, message: "Successfully uploaded file!"});
-  } catch (err) {
-    console.error(err);
-    res.json({result: false, message: "Server error (code: 500)"});
-  }
+router.post('/upload', function(req, res) {
+  upload.single('image')(req, res, function(err) {
+    if (err) {
+      console.error("Upload error:", err);
+      if (err.code === 'SignatureDoesNotMatch') {
+        return res.status(403).json({
+          result: false,
+          message: "AWS authentication failed. Please check your credentials.",
+          error: err.message
+        });
+      }
+      return res.status(500).json({
+        result: false,
+        message: "File upload failed",
+        error: err.message
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({result: false, message: "No file uploaded"});
+    }
+
+    console.log("Successfully uploaded:", req.file);
+    res.json({result: true, message: "Successfully uploaded file!", file: req.file});
+  });
 });
 
 module.exports = router;

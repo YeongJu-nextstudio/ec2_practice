@@ -429,7 +429,7 @@
                 loadingClass.remove('d-none');
 
                 // Data
-                const formData = new FormData();
+                let formData = new FormData();
                 formData.append("image", inputFile.files[0]);
                 // AJAX
                 $.ajax({
@@ -441,6 +441,11 @@
                     success: function(res) {
                         loadingClass.add('d-none');
                         alert(res.message);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        loadingClass.add('d-none');
+                        console.error("AJAX error:", textStatus, errorThrown);
+                        alert("Upload failed: " + (errorThrown || textStatus));
                     }
                 });
             });
